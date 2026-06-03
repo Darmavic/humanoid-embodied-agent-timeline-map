@@ -1,0 +1,14 @@
+node_modules/
+.env
+.env.*
+server.out.log
+server.err.log
+tunnel.out.log
+tunnel.err.log
+gh-auth.out.log
+gh-auth.err.log
+exports/*.png
+exports/*.jpg
+exports/*.jpeg
+exports/*.webp
+.DS_Store

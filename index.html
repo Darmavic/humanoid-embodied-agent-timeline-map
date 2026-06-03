@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>人形机器人具身智能智能体：时间线知识图谱</title>
+  <meta name="description" content="人形机器人中的具身智能智能体：感知、理解、规划、决策、记忆、世界模型、数据与闭环控制的产业现状、技术路线与瓶颈分析。" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">HA</div>
+        <div>
+          <h1>人形机器人中的具身智能智能体</h1>
+          <p>感知—理解—规划—决策—记忆—世界模型—控制闭环：动态交互式时间线知识图谱</p>
+        </div>
+      </div>
+      <div class="top-actions" aria-label="视图控制">
+        <button id="zoomOut" title="缩小">−</button>
+        <button id="zoomIn" title="放大">＋</button>
+        <button id="fitAll">适应全图</button>
+        <button id="resetView">重置视图</button>
+        <button id="latestView">返回当前时代</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="sidebar" aria-label="筛选与说明">
+        <section class="panel intro-card">
+          <h2>核心问题</h2>
+          <p>当前人形机器人不是单纯卡在“身体”或“智能”，而是卡在二者耦合后的闭环系统：可靠低成本身体决定数据飞轮和部署上限；感知、空间理解、规划决策、记忆、世界模型、VLA、灵巧操作和安全控制决定真实自主程度。</p>
+          <div class="stat-grid">
+            <div><strong id="nodeCount">—</strong><span>节点</span></div>
+            <div><strong id="linkCount">—</strong><span>关系</span></div>
+            <div><strong id="yearRange">—</strong><span>时间范围</span></div>
+          </div>
+        </section>
+
+        <section class="panel filters">
+          <h2>搜索与筛选</h2>
+          <label class="field">
+            <span>搜索</span>
+            <input id="searchBox" type="search" placeholder="例如：RT-2、Helix、世界模型、闭环控制、Optimus..." autocomplete="off" />
+          </label>
+          <div class="field-row">
+            <label class="field small"><span>起始年</span><input id="yearMin" type="number" step="1" /></label>
+            <label class="field small"><span>结束年</span><input id="yearMax" type="number" step="1" /></label>
+          </div>
+          <label class="field"><span>节点类型</span><select id="typeFilter" multiple size="5"></select></label>
+          <label class="field"><span>技术泳道</span><select id="laneFilter" multiple size="6"></select></label>
+          <label class="field"><span>历史阶段</span><select id="stageFilter" multiple size="5"></select></label>
+          <label class="field"><span>关系类型</span><select id="relationFilter" multiple size="5"></select></label>
+          <div class="quick-actions">
+            <button id="frontierOnly">只看前沿</button>
+            <button id="foundationOnly">只看基础理论</button>
+            <button id="clearFilters">清除筛选</button>
+          </div>
+        </section>
+
+        <section class="panel legend">
+          <h2>图例</h2>
+          <div id="legendTypes"></div>
+          <p class="hint">拖拽空白画布平移，滚轮缩放；点击节点只更新右侧详情与高亮，不会自动居中或改变视图。</p>
+        </section>
+      </aside>
+
+      <section class="canvas-wrap" aria-label="时间线知识图谱画布">
+        <div class="canvas-toolbar">
+          <span id="statusText">加载知识图谱中...</span>
+          <div class="path-actions">
+            <button id="showPredecessors" disabled>查看前置路径</button>
+            <button id="showSuccessors" disabled>查看后续影响</button>
+            <button id="clearHighlight" disabled>取消高亮</button>
+          </div>
+        </div>
+        <svg id="graphSvg" role="img" aria-label="横轴为时间、纵向为技术泳道的人形机器人具身智能知识图谱">
+          <defs>
+            <marker id="arrow-default" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,6 L9,3 z"></path>
+            </marker>
+            <marker id="arrow-highlight" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,8 L11,4 z"></path>
+            </marker>
+            <filter id="nodeShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="6" stdDeviation="7" flood-opacity="0.16"></feDropShadow>
+            </filter>
+          </defs>
+          <g id="viewport">
+            <g id="stageLayer"></g>
+            <g id="laneLayer"></g>
+            <g id="axisLayer"></g>
+            <g id="linkLayer"></g>
+            <g id="nodeLayer"></g>
+          </g>
+        </svg>
+      </section>
+
+      <aside class="detail" aria-label="节点详情">
+        <section class="panel detail-card">
+          <div class="detail-title-row">
+            <div>
+              <span id="detailType" class="type-pill">概览</span>
+              <h2 id="detailTitle">请选择一个节点</h2>
+              <p id="detailSubtitle">点击画布中的节点，查看其定义、贡献、前置依赖、后续影响与产业不确定性。</p>
+            </div>
+          </div>
+          <div id="detailMeta" class="meta-grid"></div>
+          <div id="detailBody" class="detail-body">
+            <p>建议先从右侧近期阶段开始观察产业路线，再使用“查看前置路径”追溯到控制论、行为式机器人、概率机器人、深度学习、VLA 与机器人基础模型。</p>
+          </div>
+          <div id="relatedBox" class="related-box"></div>
+        </section>
+      </aside>
+    </main>
+  </div>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

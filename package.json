@@ -1,0 +1,11 @@
+{
+  "name": "humanoid-embodied-agent-timeline-map",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Interactive timeline knowledge map for embodied intelligent agents in humanoid robots.",
+  "scripts": {
+    "check": "node tools/check.js",
+    "dev": "node tools/serve.js"
+  },
+  "devDependencies": {}
+}
