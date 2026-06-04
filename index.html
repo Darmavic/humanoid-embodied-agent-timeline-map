@@ -23,6 +23,8 @@
         <button id="fitAll">适应全图</button>
         <button id="resetView">重置视图</button>
         <button id="latestView">返回当前时代</button>
+        <button id="toggleTopbar">隐藏顶部</button>
+        <button id="fullscreenMap">地图全屏</button>
       </div>
     </header>
 
@@ -65,6 +67,7 @@
           <p class="hint">拖拽空白画布平移，滚轮缩放；点击节点只更新右侧详情与高亮，不会自动居中或改变视图。</p>
         </section>
       </aside>
+      <div id="leftSplitter" class="splitter splitter-left" role="separator" aria-orientation="vertical" tabindex="0"></div>
 
       <section class="canvas-wrap" aria-label="时间线知识图谱画布">
         <div class="canvas-toolbar">
@@ -73,6 +76,8 @@
             <button id="showPredecessors" disabled>查看前置路径</button>
             <button id="showSuccessors" disabled>查看后续影响</button>
             <button id="clearHighlight" disabled>取消高亮</button>
+            <button id="toggleTopbarInline">隐藏顶部</button>
+            <button id="fullscreenMapInline">地图全屏</button>
           </div>
         </div>
         <svg id="graphSvg" role="img" aria-label="横轴为时间、纵向为技术泳道的人形机器人具身智能知识图谱">
@@ -96,6 +101,7 @@
           </g>
         </svg>
       </section>
+      <div id="rightSplitter" class="splitter splitter-right" role="separator" aria-orientation="vertical" tabindex="0"></div>
 
       <aside class="detail" aria-label="节点详情">
         <section class="panel detail-card">

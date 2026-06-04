@@ -4,6 +4,7 @@
   const KG = window.KNOWLEDGE_GRAPH;
   if (!KG) throw new Error('window.KNOWLEDGE_GRAPH 未加载');
 
+  const appShell = document.querySelector('.app-shell');
   KG.width = 22000;
   const laneLayout = { top: 160, minHeight: 360, bottom: 240, padding: 42, stackGap: 24 };
   KG.lanes.forEach((lane, index) => {
@@ -56,7 +57,10 @@
     detailMeta: document.getElementById('detailMeta'), detailBody: document.getElementById('detailBody'), relatedBox: document.getElementById('relatedBox'),
     zoomIn: document.getElementById('zoomIn'), zoomOut: document.getElementById('zoomOut'), fitAll: document.getElementById('fitAll'), resetView: document.getElementById('resetView'), latestView: document.getElementById('latestView'),
     frontierOnly: document.getElementById('frontierOnly'), foundationOnly: document.getElementById('foundationOnly'), clearFilters: document.getElementById('clearFilters'),
-    showPredecessors: document.getElementById('showPredecessors'), showSuccessors: document.getElementById('showSuccessors'), clearHighlight: document.getElementById('clearHighlight')
+    showPredecessors: document.getElementById('showPredecessors'), showSuccessors: document.getElementById('showSuccessors'), clearHighlight: document.getElementById('clearHighlight'),
+    toggleTopbar: document.getElementById('toggleTopbar'), toggleTopbarInline: document.getElementById('toggleTopbarInline'),
+    fullscreenMap: document.getElementById('fullscreenMap'), fullscreenMapInline: document.getElementById('fullscreenMapInline'),
+    leftSplitter: document.getElementById('leftSplitter'), rightSplitter: document.getElementById('rightSplitter')
   };
 
   const nodeEls = new Map();
@@ -548,7 +552,113 @@
     setTransform();
   }
 
+  function refreshLayoutButtons() {
+    const topbarCollapsed = appShell.classList.contains('topbar-collapsed');
+    const fullscreen = appShell.classList.contains('map-fullscreen');
+    [els.toggleTopbar, els.toggleTopbarInline].filter(Boolean).forEach(btn => {
+      btn.textContent = topbarCollapsed ? '显示顶部' : '隐藏顶部';
+      btn.setAttribute('aria-pressed', String(topbarCollapsed));
+    });
+    [els.fullscreenMap, els.fullscreenMapInline].filter(Boolean).forEach(btn => {
+      btn.textContent = fullscreen ? '退出全屏' : '地图全屏';
+      btn.setAttribute('aria-pressed', String(fullscreen));
+    });
+  }
+
+  function scheduleFit(mode = 'all') {
+    requestAnimationFrame(() => fitAll(mode));
+  }
+
+  function setTopbarCollapsed(collapsed) {
+    appShell.classList.toggle('topbar-collapsed', collapsed);
+    refreshLayoutButtons();
+    scheduleFit('all');
+  }
+
+  function setMapFullscreen(enabled) {
+    appShell.classList.toggle('map-fullscreen', enabled);
+    refreshLayoutButtons();
+    scheduleFit(enabled ? 'latest' : 'all');
+    if (enabled && appShell.requestFullscreen && !document.fullscreenElement) {
+      appShell.requestFullscreen().catch(() => {});
+    } else if (!enabled && document.fullscreenElement && document.exitFullscreen) {
+      document.exitFullscreen().catch(() => {});
+    }
+  }
+
+  function syncFullscreenState() {
+    if (document.fullscreenElement || !appShell.classList.contains('map-fullscreen')) return;
+    appShell.classList.remove('map-fullscreen');
+    refreshLayoutButtons();
+    scheduleFit('all');
+  }
+
+  function setPanelWidth(side, width) {
+    const value = `${Math.round(width)}px`;
+    appShell.style.setProperty(side === 'left' ? '--left-panel-width' : '--right-panel-width', value);
+  }
+
+  function getPanelWidth(side) {
+    const prop = side === 'left' ? '--left-panel-width' : '--right-panel-width';
+    const raw = getComputedStyle(appShell).getPropertyValue(prop);
+    return Number.parseFloat(raw) || (side === 'left' ? 320 : 360);
+  }
+
+  function initSplitter(splitter, side) {
+    if (!splitter) return;
+    let startX = 0;
+    let startWidth = 0;
+    const min = side === 'left' ? 220 : 260;
+    const max = side === 'left' ? 520 : 560;
+    const move = e => {
+      const dx = e.clientX - startX;
+      const next = side === 'left' ? startWidth + dx : startWidth - dx;
+      setPanelWidth(side, clamp(next, min, max));
+    };
+    const stop = () => {
+      document.body.classList.remove('layout-dragging');
+      splitter.classList.remove('dragging');
+      window.removeEventListener('mousemove', move);
+      window.removeEventListener('mouseup', stop);
+      scheduleFit('all');
+    };
+    splitter.addEventListener('mousedown', e => {
+      e.preventDefault();
+      startX = e.clientX;
+      startWidth = getPanelWidth(side);
+      document.body.classList.add('layout-dragging');
+      splitter.classList.add('dragging');
+      window.addEventListener('mousemove', move);
+      window.addEventListener('mouseup', stop);
+    });
+    splitter.addEventListener('keydown', e => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      e.preventDefault();
+      const step = e.shiftKey ? 48 : 16;
+      const direction = e.key === 'ArrowRight' ? 1 : -1;
+      const next = side === 'left'
+        ? getPanelWidth(side) + direction * step
+        : getPanelWidth(side) - direction * step;
+      setPanelWidth(side, clamp(next, min, max));
+      scheduleFit('all');
+    });
+  }
+
+  function initLayoutControls() {
+    refreshLayoutButtons();
+    [els.toggleTopbar, els.toggleTopbarInline].filter(Boolean).forEach(btn => {
+      btn.addEventListener('click', () => setTopbarCollapsed(!appShell.classList.contains('topbar-collapsed')));
+    });
+    [els.fullscreenMap, els.fullscreenMapInline].filter(Boolean).forEach(btn => {
+      btn.addEventListener('click', () => setMapFullscreen(!appShell.classList.contains('map-fullscreen')));
+    });
+    initSplitter(els.leftSplitter, 'left');
+    initSplitter(els.rightSplitter, 'right');
+    document.addEventListener('fullscreenchange', syncFullscreenState);
+  }
+
   function initEvents() {
+    initLayoutControls();
     ['input','change'].forEach(ev => {
       els.searchBox.addEventListener(ev, applyFilterInputs);
       els.yearMin.addEventListener(ev, applyFilterInputs); els.yearMax.addEventListener(ev, applyFilterInputs);
